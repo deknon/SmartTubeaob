@@ -123,6 +123,10 @@ public class SponsorBlockSettingsPresenter extends BasePresenter<Void> {
                     mSponsorBlockData.isColorMarkerEnabled(segmentCategory)));
         }
 
+        options.add(UiOptionItem.from(getColoredString(R.string.most_replayed, R.color.most_replayed),
+                optionItem -> mSponsorBlockData.setMostReplayedEnabled(optionItem.isSelected()),
+                mSponsorBlockData.isMostReplayedEnabled()));
+
         settingsPresenter.appendCheckedCategory(getContext().getString(R.string.sponsor_color_markers), options);
     }
 

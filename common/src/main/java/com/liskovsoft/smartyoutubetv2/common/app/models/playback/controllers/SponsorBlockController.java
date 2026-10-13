@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
+import com.liskovsoft.mediaserviceinterfaces.data.HeatMarker;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
 import com.liskovsoft.mediaserviceinterfaces.data.SponsorSegment;
 import com.liskovsoft.sharedutils.helpers.Helpers;
@@ -41,6 +42,8 @@ public class SponsorBlockController extends BasePlayerController {
     private Disposable mSegmentsAction;
     private Observable<List<SponsorSegment>> mCachedSegmentsAction;
     private String mVideoId;
+    private List<SeekBarSegment> mSponsorSeekBarSegments;
+    private List<SeekBarSegment> mMostReplayedSeekBarSegments;
 
     public static class SegmentAction {
         public String segmentCategory;
@@ -87,6 +90,8 @@ public class SponsorBlockController extends BasePlayerController {
     @Override
     public void onNewVideo(Video item) {
         mSkipExclude = false;
+        mSponsorSeekBarSegments = null;
+        mMostReplayedSeekBarSegments = null;
         if (getPlayer() != null) {
             getPlayer().setSeekBarSegments(null); // reset colors
         }
@@ -110,6 +115,8 @@ public class SponsorBlockController extends BasePlayerController {
 
     @Override
     public void onMetadata(MediaItemMetadata metadata) {
+        updateMostReplayedSegments(metadata);
+
         // Disable sponsor for the live streams.
         // Fix when using remote control.
         if (!getSponsorBlockData().isSponsorBlockEnabled() || !checkVideo(getVideo())) {
@@ -200,7 +207,8 @@ public class SponsorBlockController extends BasePlayerController {
         mActiveSegments = new ArrayList<>(segments);
 
         if (getSponsorBlockData().isColorMarkersEnabled()) {
-            getPlayer().setSeekBarSegments(toSeekBarSegments(segments));
+            mSponsorSeekBarSegments = toSeekBarSegments(segments);
+            applySeekBarSegments();
         }
         if (getSponsorBlockData().isActionsEnabled()) {
             // Warn. Try to not access player object here.
@@ -332,6 +340,57 @@ public class SponsorBlockController extends BasePlayerController {
         }
 
         return result;
+    }
+
+    private void updateMostReplayedSegments(MediaItemMetadata metadata) {
+        mMostReplayedSeekBarSegments = getSponsorBlockData().isMostReplayedEnabled() ?
+                toMostReplayedSeekBarSegments(metadata.getHeatMarkers(), metadata.getMostReplayedMarkers()) : null;
+        applySeekBarSegments();
+    }
+
+    private List<SeekBarSegment> toMostReplayedSeekBarSegments(List<HeatMarker> heatMarkers, List<HeatMarker> mostReplayedMarkers) {
+        List<long[]> ranges = MostReplayedHelper.findRanges(heatMarkers, mostReplayedMarkers);
+
+        if (ranges.isEmpty()) {
+            return null;
+        }
+
+        float totalMs = MostReplayedHelper.getTotalMs(heatMarkers);
+        int color = ContextCompat.getColor(getContext(), R.color.most_replayed);
+        List<SeekBarSegment> result = new ArrayList<>();
+
+        for (long[] range : ranges) {
+            SeekBarSegment seekBarSegment = new SeekBarSegment();
+            seekBarSegment.startProgress = Math.min(range[0] / totalMs, 1); // Range: [0, 1]
+            seekBarSegment.endProgress = Math.min(range[1] / totalMs, 1); // Range: [0, 1]
+            seekBarSegment.color = color;
+            result.add(seekBarSegment);
+        }
+
+        return result;
+    }
+
+    /**
+     * Sponsor and Most Replayed markers share one seek bar, so always draw both lists together.
+     * Nothing to draw leaves the bar untouched, e.g. chapter markers stay.
+     */
+    private void applySeekBarSegments() {
+        if (getPlayer() == null) {
+            return;
+        }
+
+        List<SeekBarSegment> result = new ArrayList<>();
+
+        if (mSponsorSeekBarSegments != null) {
+            result.addAll(mSponsorSeekBarSegments);
+        }
+        if (mMostReplayedSeekBarSegments != null) {
+            result.addAll(mMostReplayedSeekBarSegments);
+        }
+
+        if (!result.isEmpty()) {
+            getPlayer().setSeekBarSegments(result);
+        }
     }
 
     /**

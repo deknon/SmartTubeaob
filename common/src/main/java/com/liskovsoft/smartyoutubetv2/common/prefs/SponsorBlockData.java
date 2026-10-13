@@ -34,6 +34,7 @@ public class SponsorBlockData {
     private boolean mIsDontSkipSegmentAgainEnabled;
     private boolean mIsPaidContentNotificationEnabled;
     private long mIgnoredDurationMs;
+    private boolean mIsMostReplayedEnabled;
     private Map<String, Integer> mSegmentLocalizedMapping;
     private Map<String, Integer> mSegmentColorMapping;
     private Set<String> mAllCategories;
@@ -234,6 +235,15 @@ public class SponsorBlockData {
         persistState();
     }
 
+    public boolean isMostReplayedEnabled() {
+        return mIsMostReplayedEnabled;
+    }
+
+    public void setMostReplayedEnabled(boolean enabled) {
+        mIsMostReplayedEnabled = enabled;
+        persistState();
+    }
+
     public boolean isAltServerEnabled() {
         return GlobalPreferences.instance(mAppPrefs.getContext()).isContentBlockAltServerEnabled();
     }
@@ -257,6 +267,7 @@ public class SponsorBlockData {
         String excludedChannels = Helpers.parseStr(split, 9);
         mIsPaidContentNotificationEnabled = Helpers.parseBoolean(split, 10, false);
         mIgnoredDurationMs = Helpers.parseLong(split, 11, 5_000);
+        mIsMostReplayedEnabled = Helpers.parseBoolean(split, 12, true);
 
         if (colorCategories != null) {
             String[] categoriesArr = Helpers.splitArray(colorCategories);
@@ -312,7 +323,7 @@ public class SponsorBlockData {
         mAppPrefs.setData(SPONSOR_BLOCK_DATA, Helpers.mergeData(
                 mIsSponsorBlockEnabled, null, null, null,
                 null, null, actions, colorCategories, mIsDontSkipSegmentAgainEnabled,
-                excludedChannels, mIsPaidContentNotificationEnabled, mIgnoredDurationMs
+                excludedChannels, mIsPaidContentNotificationEnabled, mIgnoredDurationMs, mIsMostReplayedEnabled
         ));
     }
 }
