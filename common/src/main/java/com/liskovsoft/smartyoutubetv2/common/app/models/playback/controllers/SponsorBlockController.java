@@ -94,6 +94,7 @@ public class SponsorBlockController extends BasePlayerController {
         mMostReplayedSeekBarSegments = null;
         if (getPlayer() != null) {
             getPlayer().setSeekBarSegments(null); // reset colors
+            getPlayer().setHeatmap(null);
         }
     }
 
@@ -343,9 +344,14 @@ public class SponsorBlockController extends BasePlayerController {
     }
 
     private void updateMostReplayedSegments(MediaItemMetadata metadata) {
-        mMostReplayedSeekBarSegments = getSponsorBlockData().isMostReplayedEnabled() ?
+        boolean isEnabled = getSponsorBlockData().isMostReplayedEnabled();
+        mMostReplayedSeekBarSegments = isEnabled ?
                 toMostReplayedSeekBarSegments(metadata.getHeatMarkers(), metadata.getMostReplayedMarkers()) : null;
         applySeekBarSegments();
+
+        if (getPlayer() != null) {
+            getPlayer().setHeatmap(isEnabled ? MostReplayedHelper.toIntensities(metadata.getHeatMarkers()) : null);
+        }
     }
 
     private List<SeekBarSegment> toMostReplayedSeekBarSegments(List<HeatMarker> heatMarkers, List<HeatMarker> mostReplayedMarkers) {

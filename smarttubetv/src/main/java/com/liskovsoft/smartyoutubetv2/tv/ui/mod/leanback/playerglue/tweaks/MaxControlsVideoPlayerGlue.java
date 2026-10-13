@@ -186,6 +186,12 @@ public abstract class MaxControlsVideoPlayerGlue<T extends PlayerAdapter>
         }
     }
 
+    public void setHeatmap(float[] intensities) {
+        if (getTransportViewHolder() != null) {
+            getTransportViewHolder().setHeatmap(intensities);
+        }
+    }
+
     private void updateLiveEndingTime() {
         if (mVideo == null) {
             return;

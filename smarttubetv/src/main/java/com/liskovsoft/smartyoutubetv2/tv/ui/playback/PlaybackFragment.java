@@ -924,6 +924,13 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
     }
 
     @Override
+    public void setHeatmap(float[] intensities) {
+        if (mPlayerGlue != null) {
+            mPlayerGlue.setHeatmap(intensities);
+        }
+    }
+
+    @Override
     public void updateEndingTime() {
         if (getView() != null) {
             EndingTimeView endingTime = getView().findViewById(R.id.global_ending_time);
@@ -1603,6 +1610,7 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
         showBackgroundColor(R.color.player_background);
         setChatReceiver(null);
         setSeekBarSegments(null);
+        setHeatmap(null);
         setSeekPreviewTitle(null);
     }
 

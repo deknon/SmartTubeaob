@@ -44,6 +44,7 @@ import com.liskovsoft.sharedutils.helpers.DateHelper;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.SeekBarSegment;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
+import com.liskovsoft.smartyoutubetv2.tv.ui.mod.leanback.misc.HeatmapView;
 import com.liskovsoft.smartyoutubetv2.tv.ui.mod.leanback.misc.SeekBar;
 import com.liskovsoft.smartyoutubetv2.tv.ui.mod.leanback.playerglue.tooltips.ControlButtonPresenterSelector;
 import com.liskovsoft.smartyoutubetv2.tv.ui.mod.leanback.playerglue.tweaks.ControlBarPresenter.OnControlClickedListener;
@@ -98,6 +99,7 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
         final ViewGroup mTimeInfo;
         final ViewGroup mTopEdge;
         final SeekBar mProgressBar;
+        final HeatmapView mHeatmapView;
         final ThumbsBar mThumbsBar;
         final TextView mThumbsBarTitle;
         final ViewGroup mThumbsBarWrapper;
@@ -454,6 +456,7 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
                     }
                 }
             });
+            mHeatmapView = (HeatmapView) rootView.findViewById(com.liskovsoft.smartyoutubetv2.tv.R.id.playback_heatmap);
             mProgressBar = (SeekBar) rootView.findViewById(R.id.playback_progress);
             mProgressBar.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -638,6 +641,7 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
                     mThumbsBarWrapper.setVisibility(View.INVISIBLE);
                     // MOD: fix old preview image on seek start
                     mThumbsBar.clearThumbBitmaps();
+                    mHeatmapView.setVisibility(View.GONE);
                     setOtherRowsVisible(true);
                     break;
                 case CONTROLS_MODE_COMPACT:
@@ -649,6 +653,7 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
                     // The seek position moves into the preview title, like the YouTube app
                     mTimeInfo.setVisibility(View.GONE);
                     mThumbsBarWrapper.setVisibility(View.VISIBLE);
+                    mHeatmapView.setVisibility(mHeatmapView.hasIntensities() ? View.VISIBLE : View.GONE);
                     setOtherRowsVisible(false);
                     break;
             }
@@ -847,6 +852,14 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
 
             mThumbsBarTitle.setText(title);
             mThumbsBarTitle.setVisibility(View.VISIBLE);
+        }
+
+        void setHeatmap(float[] intensities) {
+            mHeatmapView.setIntensities(intensities);
+
+            if (!mHeatmapView.hasIntensities()) {
+                mHeatmapView.setVisibility(View.GONE);
+            }
         }
 
         void setSeekBarSegments(List<SeekBarSegment> segments) {

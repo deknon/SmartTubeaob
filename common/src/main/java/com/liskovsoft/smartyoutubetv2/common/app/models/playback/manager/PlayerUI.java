@@ -37,6 +37,10 @@ public interface PlayerUI {
     void setTitle(String title);
     void showProgressBar(boolean show);
     void setSeekBarSegments(List<SeekBarSegment> segments);
+    /**
+     * @param intensities "Most replayed" buckets ordered by time, each in [0, 1]; null hides the graph
+     */
+    void setHeatmap(float[] intensities);
     void updateEndingTime();
     void setChatReceiver(ChatReceiver chatReceiver);
 }

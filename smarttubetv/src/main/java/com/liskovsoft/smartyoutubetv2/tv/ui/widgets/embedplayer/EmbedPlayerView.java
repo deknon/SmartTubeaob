@@ -202,6 +202,11 @@ public class EmbedPlayerView extends PlayerView implements PlaybackView {
     }
 
     @Override
+    public void setHeatmap(float[] intensities) {
+
+    }
+
+    @Override
     public void updateEndingTime() {
 
     }

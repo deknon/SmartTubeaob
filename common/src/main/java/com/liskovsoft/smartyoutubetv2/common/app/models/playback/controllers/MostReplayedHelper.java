@@ -71,6 +71,25 @@ final class MostReplayedHelper {
         return ranges;
     }
 
+    /**
+     * @return bucket intensities ordered by time, null when the video has no heatmap
+     */
+    static float[] toIntensities(List<HeatMarker> heatMarkers) {
+        if (heatMarkers == null || heatMarkers.isEmpty()) {
+            return null;
+        }
+
+        List<HeatMarker> buckets = new ArrayList<>(heatMarkers);
+        Collections.sort(buckets, (a, b) -> Long.compare(a.getStartMs(), b.getStartMs()));
+
+        float[] intensities = new float[buckets.size()];
+        for (int i = 0; i < intensities.length; i++) {
+            intensities[i] = buckets.get(i).getIntensity();
+        }
+
+        return intensities;
+    }
+
     static long getTotalMs(List<HeatMarker> heatMarkers) {
         long totalMs = 0;
 
