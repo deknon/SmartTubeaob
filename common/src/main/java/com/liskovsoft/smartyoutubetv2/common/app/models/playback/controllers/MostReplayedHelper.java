@@ -10,7 +10,7 @@ import java.util.List;
  * Picks the "Most Replayed" ranges to draw on the seek bar from YouTube's heatmap.
  */
 final class MostReplayedHelper {
-    private static final int MAX_RANGES = 3;
+    private static final int MAX_RANGES = 6;
     // Weaker local maxima are noise on a flat heatmap, not peaks
     private static final float MIN_PEAK_INTENSITY = 0.25f;
 

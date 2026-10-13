@@ -36,6 +36,7 @@ import androidx.leanback.widget.PlaybackControlsRow;
 import androidx.leanback.widget.PlaybackRowPresenter;
 import androidx.leanback.widget.PlaybackSeekDataProvider;
 import androidx.leanback.widget.PlaybackSeekUi;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.leanback.widget.Presenter;
 import androidx.leanback.widget.RowPresenter;
 
@@ -115,6 +116,7 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
         Object mSelectedItem;
         PlaybackControlsRow.PlayPauseAction mPlayPauseAction;
         int mThumbHeroIndex = -1;
+        String mSeekPreviewTitle;
 
         Client mSeekClient;
         boolean mInSeek;
@@ -631,11 +633,12 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
                     mSecondaryControlsVh.view.setVisibility(View.VISIBLE);
                     mDescriptionViewHolder.view.setVisibility(View.VISIBLE);
                     mAdditionalInfo.setVisibility(View.VISIBLE);
-                    //mTimeInfo.setVisibility(View.VISIBLE);
+                    mTimeInfo.setVisibility(View.VISIBLE);
                     // Don't set to GONE or carousel will crash (can't properly calculate length)
                     mThumbsBarWrapper.setVisibility(View.INVISIBLE);
                     // MOD: fix old preview image on seek start
                     mThumbsBar.clearThumbBitmaps();
+                    setOtherRowsVisible(true);
                     break;
                 case CONTROLS_MODE_COMPACT:
                     mControlsVh.view.setVisibility(View.GONE);
@@ -643,9 +646,34 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
                     mSecondaryControlsVh.view.setVisibility(View.GONE);
                     mDescriptionViewHolder.view.setVisibility(View.GONE);
                     mAdditionalInfo.setVisibility(View.GONE);
-                    //mTimeInfo.setVisibility(View.GONE);
+                    // The seek position moves into the preview title, like the YouTube app
+                    mTimeInfo.setVisibility(View.GONE);
                     mThumbsBarWrapper.setVisibility(View.VISIBLE);
+                    setOtherRowsVisible(false);
                     break;
+            }
+        }
+
+        /**
+         * Rows below the player (chapters, suggestions) cover the video while seeking.
+         */
+        private void setOtherRowsVisible(boolean visible) {
+            View playerRow = view;
+            while (playerRow.getParent() instanceof View && !(playerRow.getParent() instanceof RecyclerView)) {
+                playerRow = (View) playerRow.getParent();
+            }
+
+            if (!(playerRow.getParent() instanceof RecyclerView)) {
+                return;
+            }
+
+            ViewGroup rows = (ViewGroup) playerRow.getParent();
+
+            for (int i = 0; i < rows.getChildCount(); i++) {
+                View row = rows.getChildAt(i);
+                if (row != playerRow) {
+                    row.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+                }
             }
         }
 
@@ -728,6 +756,7 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
                 formatTime(currentTimeMs, mTempBuilder);
                 mCurrentTime.setText(mTempBuilder.toString());
             }
+            updateThumbsBarTitle();
         }
 
         void setCurrentPosition(long currentTimeMs) {
@@ -801,12 +830,23 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
         }
 
         void setSeekPreviewTitle(String title) {
-            if (title != null) {
-                mThumbsBarTitle.setText(title);
-                mThumbsBarTitle.setVisibility(View.VISIBLE);
-            } else {
-                mThumbsBarTitle.setVisibility(View.GONE);
+            mSeekPreviewTitle = title;
+            updateThumbsBarTitle();
+        }
+
+        /**
+         * "04:31  Chapter title" above the previews, the time alone when there are no chapters.
+         */
+        private void updateThumbsBarTitle() {
+            StringBuilder title = new StringBuilder();
+            formatTime(Math.max(mCurrentTimeInMs, 0), title);
+
+            if (mSeekPreviewTitle != null) {
+                title.append("  ").append(mSeekPreviewTitle);
             }
+
+            mThumbsBarTitle.setText(title);
+            mThumbsBarTitle.setVisibility(View.VISIBLE);
         }
 
         void setSeekBarSegments(List<SeekBarSegment> segments) {
